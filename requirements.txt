@@ -1,0 +1,6 @@
+flask>=2.2.0
+gunicorn
+requests
+pandas
+numpy
+scikit-learn==1.6.0

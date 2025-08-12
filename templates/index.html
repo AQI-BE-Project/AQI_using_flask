@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AQI Prediction</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>AQI Prediction</h1>
+
+    <form id="predict-form">
+      <input type="hidden" name="action" value="post">
+
+      <div class="input-group">
+        <label for="input1">State</label>
+        <select id="input1" name="input1" required>
+          <option value="">Select State</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="input2">City</label>
+        <select id="input2" name="input2" required>
+          <option value="">Select City</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="input3">Station name</label>
+        <select id="input3" name="input3" required>
+          <option value="">Select Station</option>
+        </select>
+      </div>
+
+      <button type="submit">Get AQI Forecast</button>
+    </form>
+
+    <div id="error" class="error" style="display:none;"></div>
+
+    <div id="single-result" class="result" style="display:none;">
+      <h2>Predicted AQI: <span id="pred-val"></span></h2>
+    </div>
+
+    <div id="weekly" style="display:none;">
+      <h3>7-day forecasts</h3>
+      <table id="weekly-table">
+        <thead>
+          <tr><th>Date</th><th>Avg AQI</th><th>Max AQI</th><th>Min AQI</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Your state/city/station mapping
+    const stateObject = {
+      "Karnataka": {
+        "Bangalore": ["bangalore", "whitefield", "yelahanka"],
+        "Mysore": ["mysore_station1", "mysore_station2"]
+      },
+      "Maharashtra": {
+        "Mumbai": ["colaba", "powai", "sion"],
+        "Pune": ["shivajinagar", "hadapsar"]
+      }
+      // Add rest from your big stateObject here
+    };
+
+    window.onload = function () {
+      const stateSel = document.getElementById("input1");
+      const citySel = document.getElementById("input2");
+      const stationSel = document.getElementById("input3");
+
+      // Populate states
+      for (let state in stateObject) {
+        stateSel.options[stateSel.options.length] = new Option(state, state);
+      }
+
+      // On state change → load cities
+      stateSel.onchange = function () {
+        citySel.length = 1;
+        stationSel.length = 1;
+        if (this.selectedIndex < 1) return;
+        for (let city in stateObject[this.value]) {
+          citySel.options[citySel.options.length] = new Option(city, city);
+        }
+      };
+
+      // On city change → load stations
+      citySel.onchange = function () {
+        stationSel.length = 1;
+        if (this.selectedIndex < 1) return;
+        let stations = stateObject[stateSel.value][this.value];
+        for (let i = 0; i < stations.length; i++) {
+          stationSel.options[stationSel.options.length] = new Option(stations[i], stations[i]);
+        }
+      };
+    };
+
+    // Fetch prediction
+    const form = document.getElementById('predict-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('weekly').style.display = 'none';
+      document.getElementById('single-result').style.display = 'none';
+
+      const formData = new FormData(form);
+      try {
+        const resp = await fetch('/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          const err = data.error || JSON.stringify(data);
+          showError(err);
+          return;
+        }
+        // Single result
+        document.getElementById('pred-val').innerText = data.result;
+        document.getElementById('single-result').style.display = 'block';
+
+        // Weekly
+        const weekly = JSON.parse(data.json_string);
+        const tbody = document.querySelector('#weekly-table tbody');
+        tbody.innerHTML = '';
+        for (let i = 0; i < weekly.Date_val.length; i++) {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${weekly.Date_val[i] || '-'}</td><td>${weekly.avg_val[i]}</td><td>${weekly.Max[i]}</td><td>${weekly.Min[i]}</td>`;
+          tbody.appendChild(row);
+        }
+        document.getElementById('weekly').style.display = 'block';
+
+      } catch (err) {
+        showError(err.toString());
+      }
+    });
+
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.innerText = msg;
+      el.style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
