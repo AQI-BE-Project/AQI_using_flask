@@ -6,7 +6,6 @@
     <title>AQI Prediction</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
-        /* Searchable dropdown input */
         #stationSearch {
             width: 100%;
             padding: 10px;
@@ -20,11 +19,16 @@
             border-color: #0077b6;
             box-shadow: 0 0 5px rgba(0, 119, 182, 0.4);
         }
-
-        /* Highlight matched text in options */
         .highlight {
             background-color: yellow;
             font-weight: bold;
+        }
+        #healthImplications {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            color: white;
         }
     </style>
 </head>
@@ -45,6 +49,7 @@
     <div id="aqiResult" class="aqi-display" style="margin-top:20px;">
         <p>Select a station and click Predict AQI to see results.</p>
     </div>
+    <div id="healthImplications"></div>
 </div>
 
 <script>
@@ -52,16 +57,16 @@ const stationSearch = document.getElementById("stationSearch");
 const stationSelect = document.getElementById("stationSelect");
 const predictBtn = document.getElementById("predictBtn");
 const aqiResult = document.getElementById("aqiResult");
+const healthDiv = document.getElementById("healthImplications");
 
 let allStations = [];
 
-// Fetch stations from backend
+// Fetch stations
 async function loadStations() {
     try {
         const res = await fetch("/stations_list");
         const stations = await res.json();
         allStations = stations;
-
         populateDropdown(allStations);
         stationSelect.disabled = false;
     } catch (err) {
@@ -71,17 +76,13 @@ async function loadStations() {
     }
 }
 
-// Populate dropdown with optional search highlight
 function populateDropdown(stations, highlight="") {
     stationSelect.innerHTML = `<option value="">Select a station</option>`;
     const query = highlight.toLowerCase();
-
     stations.forEach(station => {
         const opt = document.createElement("option");
         opt.value = station.uid;
-
         if(query && station.name.toLowerCase().includes(query)) {
-            // Highlight matching text
             const regex = new RegExp(`(${query})`, "ig");
             opt.innerHTML = station.name.replace(regex, '<span class="highlight">$1</span>');
         } else {
@@ -92,7 +93,6 @@ function populateDropdown(stations, highlight="") {
     stationSelect.disabled = stationSelect.options.length <= 1;
 }
 
-// Filter dropdown based on search input
 stationSearch.addEventListener("input", () => {
     const query = stationSearch.value.toLowerCase();
     const filteredStations = allStations.filter(station =>
@@ -111,6 +111,7 @@ predictBtn.addEventListener("click", async () => {
     if (!stationUid) return;
 
     aqiResult.innerHTML = "<p>Loading AQI prediction...</p>";
+    healthDiv.innerHTML = "";
 
     const formData = new FormData();
     formData.append("input1", "");
@@ -146,7 +147,6 @@ predictBtn.addEventListener("click", async () => {
                 <td>${forecast.Min[i]}</td>
             </tr>`;
         }
-
         tableHTML += "</tbody></table>";
 
         aqiResult.innerHTML = `
@@ -154,13 +154,47 @@ predictBtn.addEventListener("click", async () => {
             <p><strong>Station UID:</strong> ${result.input3}</p>
             ${tableHTML}
         `;
+
+        // Color-coded health implications
+        const aqiVal = parseFloat(result.result);
+        let bgColor = '', text = '', textColor = '';
+
+        if (aqiVal <= 50) {
+            bgColor = 'green';
+            textColor = 'black';
+            text = "Air quality is considered satisfactory, and air pollution poses little or no risk. None for PM2.5.";
+        } else if (aqiVal <= 100) {
+            bgColor = 'yellow';
+            textColor = 'black';
+            text = "Air quality is acceptable; sensitive groups may have moderate health concern. Limit prolonged outdoor exertion if needed.";
+        } else if (aqiVal <= 150) {
+            bgColor = 'orange';
+            textColor = 'black';
+            text = "Members of sensitive groups may experience health effects. Limit prolonged outdoor exertion.";
+        } else if (aqiVal <= 200) {
+            bgColor = 'red';
+            textColor = 'white';
+            text = "Everyone may experience health effects; sensitive groups more serious effects. Avoid prolonged outdoor exertion.";
+        } else if (aqiVal <= 300) {
+            bgColor = 'purple';
+            textColor = 'white';
+            text = "Health warnings of emergency conditions. Sensitive groups should avoid all outdoor exertion.";
+        } else {
+            bgColor = 'maroon';
+            textColor = 'white';
+            text = "Health alert: everyone may experience more serious health effects. Avoid all outdoor exertion.";
+        }
+
+        healthDiv.style.backgroundColor = bgColor;
+        healthDiv.style.color = textColor;
+        healthDiv.innerHTML = `<h3>Health Implications</h3><p>${text}</p>`;
+
     } catch (err) {
         console.error("Prediction error:", err);
         aqiResult.innerHTML = `<p style="color:red;">Prediction failed. See console for details.</p>`;
     }
 });
 
-// Initialize station list on page load
 loadStations();
 </script>
 </body>
