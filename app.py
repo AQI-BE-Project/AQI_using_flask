@@ -2,19 +2,17 @@ import os
 import json
 import pickle
 import requests
-import pandas as pd
 import traceback
+
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# Config: paths / env
 MODEL_PATH = os.environ.get("MODEL_PATH", "new_model_realtime.pickle")
-CSV_FALLBACK = os.environ.get("AQI_CSV_PATH", "AQI_Data_Updated.csv")
-WAQI_TOKEN = os.environ.get("WAQI_TOKEN")  # MUST be set in env
+WAQI_TOKEN = os.environ.get("WAQI_TOKEN")
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "true").lower() == "true"
 
-# Load model
+# Load ML model
 try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
@@ -23,22 +21,45 @@ except Exception as e:
     print(f"[ERROR] Could not load model from {MODEL_PATH}: {e}")
     traceback.print_exc()
 
-# Load fallback CSV
-if os.path.exists(CSV_FALLBACK):
-    try:
-        df_aqi = pd.read_csv(CSV_FALLBACK)
-    except Exception as e:
-        df_aqi = None
-        print(f"[ERROR] Could not read CSV: {e}")
-        traceback.print_exc()
-else:
-    df_aqi = None
+stations_list = []  # store all stations in a flat list
 
+def fetch_all_stations():
+    global stations_list
+    stations_list = []
+    try:
+        # This covers India — change lat/lng to expand area if needed
+        url = f"https://api.waqi.info/map/bounds/?token={WAQI_TOKEN}&latlng=8.0,68.0,37.0,97.0"
+        resp = requests.get(url, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+
+        if data.get("status") != "ok":
+            print(f"[WARN] WAQI API status not ok: {data.get('status')}")
+            return
+
+        for station in data.get("data", []):
+            name = station['station']['name']
+            uid = station['uid']
+            stations_list.append({"name": name, "uid": uid})
+
+        print(f"[INFO] Loaded {len(stations_list)} stations.")
+
+    except Exception as e:
+        print("[ERROR] Failed to fetch stations from WAQI API:")
+        traceback.print_exc()
+
+fetch_all_stations()
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", waqi_token=WAQI_TOKEN)
 
+@app.route("/stations_list")
+def get_all_stations():
+    try:
+        return jsonify(stations_list)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/predict", methods=["POST"])
 def predict_ajax():
@@ -48,20 +69,17 @@ def predict_ajax():
         if not WAQI_TOKEN:
             raise EnvironmentError("WAQI_TOKEN not set in server environment.")
 
-        input1 = request.form.get("input1", "").strip()
-        input2 = request.form.get("input2", "").strip()
-        input3 = request.form.get("input3", "").strip()
-
-        if not input3:
-            raise ValueError("input3 (station) is required.")
+        station_uid = request.form.get("input3", "").strip()
+        if not station_uid:
+            raise ValueError("input3 (station UID) is required.")
 
         base_url = "https://api.waqi.info"
-        r = requests.get(f"{base_url}/feed/{input3}/?token={WAQI_TOKEN}", timeout=10)
+        r = requests.get(f"{base_url}/feed/@{station_uid}/?token={WAQI_TOKEN}", timeout=10)
         r.raise_for_status()
         data = r.json()
 
         if data.get("status") != "ok":
-            raise ValueError(f"WAQI API returned status: {data.get('status')}", data)
+            raise ValueError(f"WAQI API returned status: {data.get('status')}")
 
         pollutants = ['pm25', 'pm10', 'o3']
         val = []
@@ -115,19 +133,14 @@ def predict_ajax():
 
         return jsonify({
             'result': classification,
-            'input1': input1,
-            'input2': input2,
-            'input3': input3,
+            'input3': station_uid,
             'result1': classification,
             'json_string': json.dumps(weekly_data)
         })
 
     except Exception as e:
-        # Log full error to console
         print("[ERROR] Exception in /predict route:")
         traceback.print_exc()
-
-        # Return detailed info if debug mode is on
         if DEBUG_MODE:
             return jsonify({
                 "error": str(e),
@@ -137,11 +150,9 @@ def predict_ajax():
         else:
             return jsonify({"error": "Server error"}), 500
 
-
 @app.route("/health")
 def health():
     return "ok", 200
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5002))

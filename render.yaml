@@ -4,11 +4,17 @@ services:
     env: python
     plan: free
     region: oregon
+
+    # Install dependencies from requirements.txt
     buildCommand: pip install -r requirements.txt
+
+    # Start command using Gunicorn
     startCommand: gunicorn app:app --preload --workers 3 --bind 0.0.0.0:$PORT
+
+    # Environment variables (set secret tokens on Render dashboard, not here)
     envVars:
       - key: WAQI_TOKEN
-        # leave blank in repo; set this on Render dashboard instead
-        value: "49979a07221b1ab6781c500a5eaa6e1de513d476"
+        # leave value blank here; set the actual token on Render dashboard
+        value: ""
       - key: MODEL_PATH
         value: new_model_realtime.pickle
