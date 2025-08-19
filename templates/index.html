@@ -1,150 +1,201 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>AQI Prediction</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>AQI Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        #stationSearch {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            outline: none;
+        }
+        #stationSearch:focus {
+            border-color: #0077b6;
+            box-shadow: 0 0 5px rgba(0, 119, 182, 0.4);
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        #healthImplications {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <h1>AQI Prediction</h1>
 
-    <form id="predict-form">
-      <input type="hidden" name="action" value="post">
+    <label for="stationSearch">Search Station:</label>
+    <input type="text" id="stationSearch" placeholder="Type station name to search..." />
 
-      <div class="input-group">
-        <label for="input1">State</label>
-        <select id="input1" name="input1" required>
-          <option value="">Select State</option>
-        </select>
-      </div>
+    <label for="stationSelect">Select Station:</label>
+    <select id="stationSelect" disabled>
+        <option value="">Select a station</option>
+    </select>
 
-      <div class="input-group">
-        <label for="input2">City</label>
-        <select id="input2" name="input2" required>
-          <option value="">Select City</option>
-        </select>
-      </div>
+    <button id="predictBtn" disabled>Predict AQI</button>
 
-      <div class="input-group">
-        <label for="input3">Station name</label>
-        <select id="input3" name="input3" required>
-          <option value="">Select Station</option>
-        </select>
-      </div>
-
-      <button type="submit">Get AQI Forecast</button>
-    </form>
-
-    <div id="error" class="error" style="display:none;"></div>
-
-    <div id="single-result" class="result" style="display:none;">
-      <h2>Predicted AQI: <span id="pred-val"></span></h2>
+    <div id="aqiResult" class="aqi-display" style="margin-top:20px;">
+        <p>Select a station and click Predict AQI to see results.</p>
     </div>
+    <div id="healthImplications"></div>
+</div>
 
-    <div id="weekly" style="display:none;">
-      <h3>7-day forecasts</h3>
-      <table id="weekly-table">
-        <thead>
-          <tr><th>Date</th><th>Avg AQI</th><th>Max AQI</th><th>Min AQI</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
+<script>
+const stationSearch = document.getElementById("stationSearch");
+const stationSelect = document.getElementById("stationSelect");
+const predictBtn = document.getElementById("predictBtn");
+const aqiResult = document.getElementById("aqiResult");
+const healthDiv = document.getElementById("healthImplications");
 
-  <script>
-    // Your state/city/station mapping
-    const stateObject = {
-      "Karnataka": {
-        "Bangalore": ["bangalore", "whitefield", "yelahanka"],
-        "Mysore": ["mysore_station1", "mysore_station2"]
-      },
-      "Maharashtra": {
-        "Mumbai": ["colaba", "powai", "sion"],
-        "Pune": ["shivajinagar", "hadapsar"]
-      }
-      // Add rest from your big stateObject here
-    };
+let allStations = [];
 
-    window.onload = function () {
-      const stateSel = document.getElementById("input1");
-      const citySel = document.getElementById("input2");
-      const stationSel = document.getElementById("input3");
-
-      // Populate states
-      for (let state in stateObject) {
-        stateSel.options[stateSel.options.length] = new Option(state, state);
-      }
-
-      // On state change → load cities
-      stateSel.onchange = function () {
-        citySel.length = 1;
-        stationSel.length = 1;
-        if (this.selectedIndex < 1) return;
-        for (let city in stateObject[this.value]) {
-          citySel.options[citySel.options.length] = new Option(city, city);
-        }
-      };
-
-      // On city change → load stations
-      citySel.onchange = function () {
-        stationSel.length = 1;
-        if (this.selectedIndex < 1) return;
-        let stations = stateObject[stateSel.value][this.value];
-        for (let i = 0; i < stations.length; i++) {
-          stationSel.options[stationSel.options.length] = new Option(stations[i], stations[i]);
-        }
-      };
-    };
-
-    // Fetch prediction
-    const form = document.getElementById('predict-form');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      document.getElementById('error').style.display = 'none';
-      document.getElementById('weekly').style.display = 'none';
-      document.getElementById('single-result').style.display = 'none';
-
-      const formData = new FormData(form);
-      try {
-        const resp = await fetch('/predict', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await resp.json();
-        if (!resp.ok) {
-          const err = data.error || JSON.stringify(data);
-          showError(err);
-          return;
-        }
-        // Single result
-        document.getElementById('pred-val').innerText = data.result;
-        document.getElementById('single-result').style.display = 'block';
-
-        // Weekly
-        const weekly = JSON.parse(data.json_string);
-        const tbody = document.querySelector('#weekly-table tbody');
-        tbody.innerHTML = '';
-        for (let i = 0; i < weekly.Date_val.length; i++) {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${weekly.Date_val[i] || '-'}</td><td>${weekly.avg_val[i]}</td><td>${weekly.Max[i]}</td><td>${weekly.Min[i]}</td>`;
-          tbody.appendChild(row);
-        }
-        document.getElementById('weekly').style.display = 'block';
-
-      } catch (err) {
-        showError(err.toString());
-      }
-    });
-
-    function showError(msg) {
-      const el = document.getElementById('error');
-      el.innerText = msg;
-      el.style.display = 'block';
+// Fetch stations
+async function loadStations() {
+    try {
+        const res = await fetch("/stations_list");
+        const stations = await res.json();
+        allStations = stations;
+        populateDropdown(allStations);
+        stationSelect.disabled = false;
+    } catch (err) {
+        console.error("Failed to load stations:", err);
+        stationSelect.innerHTML = `<option value="">Error loading stations</option>`;
+        stationSelect.disabled = true;
     }
-  </script>
+}
 
+function populateDropdown(stations, highlight="") {
+    stationSelect.innerHTML = `<option value="">Select a station</option>`;
+    const query = highlight.toLowerCase();
+    stations.forEach(station => {
+        const opt = document.createElement("option");
+        opt.value = station.uid;
+        if(query && station.name.toLowerCase().includes(query)) {
+            const regex = new RegExp(`(${query})`, "ig");
+            opt.innerHTML = station.name.replace(regex, '<span class="highlight">$1</span>');
+        } else {
+            opt.textContent = station.name;
+        }
+        stationSelect.appendChild(opt);
+    });
+    stationSelect.disabled = stationSelect.options.length <= 1;
+}
+
+stationSearch.addEventListener("input", () => {
+    const query = stationSearch.value.toLowerCase();
+    const filteredStations = allStations.filter(station =>
+        station.name.toLowerCase().includes(query)
+    );
+    populateDropdown(filteredStations, query);
+    predictBtn.disabled = true;
+});
+
+stationSelect.addEventListener("change", () => {
+    predictBtn.disabled = !stationSelect.value;
+});
+
+predictBtn.addEventListener("click", async () => {
+    const stationUid = stationSelect.value;
+    if (!stationUid) return;
+
+    aqiResult.innerHTML = "<p>Loading AQI prediction...</p>";
+    healthDiv.innerHTML = "";
+
+    const formData = new FormData();
+    formData.append("input1", "");
+    formData.append("input2", "");
+    formData.append("input3", stationUid);
+
+    try {
+        const res = await fetch("/predict", { method: "POST", body: formData });
+        const result = await res.json();
+
+        if (result.error) {
+            aqiResult.innerHTML = `<p style="color:red;">Error: ${result.error}</p>`;
+            return;
+        }
+
+        const forecast = JSON.parse(result.json_string);
+        let tableHTML = `<table border="1" cellpadding="8" cellspacing="0" style="width:100%; margin-top:15px;">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Predicted Avg</th>
+                    <th>Predicted Max</th>
+                    <th>Predicted Min</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        for (let i = 0; i < forecast.Date_val.length; i++) {
+            tableHTML += `<tr>
+                <td>${forecast.Date_val[i]}</td>
+                <td>${forecast.avg_val[i]}</td>
+                <td>${forecast.Max[i]}</td>
+                <td>${forecast.Min[i]}</td>
+            </tr>`;
+        }
+        tableHTML += "</tbody></table>";
+
+        aqiResult.innerHTML = `
+            <h3>Predicted AQI: ${result.result}</h3>
+            <p><strong>Station UID:</strong> ${result.input3}</p>
+            ${tableHTML}
+        `;
+
+        // Color-coded health implications
+        const aqiVal = parseFloat(result.result);
+        let bgColor = '', text = '', textColor = '';
+
+        if (aqiVal <= 50) {
+            bgColor = 'green';
+            textColor = 'black';
+            text = "Air quality is considered satisfactory, and air pollution poses little or no risk. None for PM2.5.";
+        } else if (aqiVal <= 100) {
+            bgColor = 'yellow';
+            textColor = 'black';
+            text = "Air quality is acceptable; sensitive groups may have moderate health concern. Limit prolonged outdoor exertion if needed.";
+        } else if (aqiVal <= 150) {
+            bgColor = 'orange';
+            textColor = 'black';
+            text = "Members of sensitive groups may experience health effects. Limit prolonged outdoor exertion.";
+        } else if (aqiVal <= 200) {
+            bgColor = 'red';
+            textColor = 'white';
+            text = "Everyone may experience health effects; sensitive groups more serious effects. Avoid prolonged outdoor exertion.";
+        } else if (aqiVal <= 300) {
+            bgColor = 'purple';
+            textColor = 'white';
+            text = "Health warnings of emergency conditions. Sensitive groups should avoid all outdoor exertion.";
+        } else {
+            bgColor = 'maroon';
+            textColor = 'white';
+            text = "Health alert: everyone may experience more serious health effects. Avoid all outdoor exertion.";
+        }
+
+        healthDiv.style.backgroundColor = bgColor;
+        healthDiv.style.color = textColor;
+        healthDiv.innerHTML = `<h3>Health Implications</h3><p>${text}</p>`;
+
+    } catch (err) {
+        console.error("Prediction error:", err);
+        aqiResult.innerHTML = `<p style="color:red;">Prediction failed. See console for details.</p>`;
+    }
+});
+
+loadStations();
+</script>
 </body>
 </html>
