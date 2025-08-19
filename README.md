@@ -45,7 +45,7 @@ The system combines **historical CPCB datasets** with **real-time WAQI API feeds
 
 ## 🖥️ Screenshots
 ### AQI Prediction UI
-![AQI Prediction Dashboard](./images/aqi_dashboard.png)
+![AQI Prediction Dashboard](./images/aqi_ui_dashboard.png)
 ![AQI Prediction UI - Mumbai](./images/aqi_ui_prediction1.png)
 ![AQI Prediction UI - Shillong](./images/aqi_ui_prediction2.png)
 
