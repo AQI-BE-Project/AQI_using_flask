@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="53cdd033-2e85-445c-9a4e-e04e2b18dbf4" name="Changes" comment="Added logic to show color codded health implications to make our webapp user-friendly.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-    </list>
+    <list default="true" id="53cdd033-2e85-445c-9a4e-e04e2b18dbf4" name="Changes" comment="Port change" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -41,22 +38,22 @@
     &quot;assignee&quot;: &quot;Aishwarya-Joshi11&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/AQI-BE-Project/AQI_using_flask.git",
-    "accountId": "6a68b055-daf6-4637-ba19-d5e30cf988f2"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/AQI-BE-Project/AQI_using_flask.git&quot;,
+    &quot;accountId&quot;: &quot;6a68b055-daf6-4637-ba19-d5e30cf988f2&quot;
   },
-  "recentNewPullRequestHead": {
-    "server": {
-      "useHttp": false,
-      "host": "github.com",
-      "port": null,
-      "suffix": null
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
     },
-    "owner": "AQI-BE-Project",
-    "repository": "AQI_using_flask"
+    &quot;owner&quot;: &quot;AQI-BE-Project&quot;,
+    &quot;repository&quot;: &quot;AQI_using_flask&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -72,7 +69,7 @@
     "Python.app.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "#2 on dev-branch-dynamic-dropdown-list",
+    "git-widget-placeholder": "#3 on dev-branch-dynamic-dropdown-list",
     "settings.editor.selected.configurable": "project.propVCSSupport.CommitDialog"
   }
 }]]></component>
@@ -156,7 +153,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755146435480</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Port change">
+      <option name="closed" value="true" />
+      <created>1755582044010</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1755582044010</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -230,6 +235,7 @@
     <MESSAGE value="Initial Commit" />
     <MESSAGE value="Updated logic to load all AQI Stations in India from waqi.info website." />
     <MESSAGE value="Added logic to show color codded health implications to make our webapp user-friendly." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added logic to show color codded health implications to make our webapp user-friendly." />
+    <MESSAGE value="Port change" />
+    <option name="LAST_COMMIT_MESSAGE" value="Port change" />
   </component>
 </project>
