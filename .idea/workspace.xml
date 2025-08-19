@@ -41,22 +41,22 @@
     &quot;assignee&quot;: &quot;Aishwarya-Joshi11&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/AQI-BE-Project/AQI_using_flask.git",
-    "accountId": "6a68b055-daf6-4637-ba19-d5e30cf988f2"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/AQI-BE-Project/AQI_using_flask.git&quot;,
+    &quot;accountId&quot;: &quot;6a68b055-daf6-4637-ba19-d5e30cf988f2&quot;
   },
-  "recentNewPullRequestHead": {
-    "server": {
-      "useHttp": false,
-      "host": "github.com",
-      "port": null,
-      "suffix": null
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
     },
-    "owner": "AQI-BE-Project",
-    "repository": "AQI_using_flask"
+    &quot;owner&quot;: &quot;AQI-BE-Project&quot;,
+    &quot;repository&quot;: &quot;AQI_using_flask&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -72,7 +72,7 @@
     "Python.app.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "#2 on dev-branch-dynamic-dropdown-list",
+    "git-widget-placeholder": "#3 on dev-branch-dynamic-dropdown-list",
     "settings.editor.selected.configurable": "project.propVCSSupport.CommitDialog"
   }
 }]]></component>
