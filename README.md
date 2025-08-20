@@ -77,5 +77,5 @@ python app.py                          # Run app
 
 ## 👤 Author
 **Aishwarya Joshi**  
-📍 Oregon State University (MS CS) | Software Engineer (AI/ML, Cloud)  
+📍 P.E.S's Modern College Of Engineering, Pune, MH, India (BE Computer Engineering, Aug 2020–June 2021)   
 [LinkedIn](https://www.linkedin.com/in/aishwarya-j-822999188) | [GitHub](https://github.com/Aishwarya-Joshi11)
